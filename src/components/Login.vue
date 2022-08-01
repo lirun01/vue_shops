@@ -32,8 +32,8 @@ export default {
   data() {
     return {
       userinfo: {
-        username: "",
-        password: "",
+        username: "admin",
+        password: "123456",
       },
       loginrules: {
         username: [
