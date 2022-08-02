@@ -55,6 +55,7 @@
         </el-table-column>
         <el-table-column prop="address" label="操作">
           <template slot-scope="scope">
+            <!-- {{ scope.row }} -->
             <el-button
               type="primary"
               icon="el-icon-edit"
@@ -71,7 +72,11 @@
               placement="top"
               :enterable="false"
             >
-              <el-button type="warning" icon="el-icon-setting"></el-button>
+              <el-button
+                type="warning"
+                icon="el-icon-setting"
+                @click="setRole(scope.row)"
+              ></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -150,6 +155,35 @@
         <el-button type="primary" @click="putUser">确 定</el-button>
       </span>
     </el-dialog>
+
+    <!-- 分配角色 -->
+    <el-dialog
+      title="分配角色"
+      :visible.sync="setRoleDialogVisible"
+      width="50%"
+    >
+      <div class="userfour">
+        <p>当前的用户：{{ userinfo.username }}</p>
+        <p>当前的角色：{{ userinfo.role_name }}</p>
+
+        <p>
+          分配新角色：
+          <el-select v-model="selectRoleId" placeholder="请选择">
+            <el-option
+              v-for="item in rolesList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRoleDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -214,6 +248,10 @@ export default {
           { validator: checkMobile, trigger: "blur" },
         ],
       },
+      setRoleDialogVisible: false,
+      userinfo: {},
+      rolesList: {},
+      selectRoleId: "",
     };
   },
   created() {
@@ -313,6 +351,28 @@ export default {
       this.getUserList();
       this.$message.success(res.meta.msg);
     },
+    async setRole(userinfo) {
+      this.userinfo = userinfo;
+      const { data: res } = await this.$http.get("roles");
+      if (res.meta.status !== 200)
+        return this.$message.error("获取角色列表失败");
+      this.rolesList = res.data;
+      this.$message.success(res.meta.msg);
+      console.log(res);
+      this.setRoleDialogVisible = true;
+    },
+    async saveRoleInfo() {
+      if(!this.selectRoleId){
+        return this.$message.error('选择要分配的角色')
+      }
+      const { data: res } = await this.$http.put(`users/${this.userinfo.id}/role`, {
+        rid: this. selectRoleId 
+      });
+      if (res.meta.status !== 200) return this.$message.error("设置角色失败");
+      this.getUserList();
+      this.$message.success(res.meta.msg)
+      this.setRoleDialogVisible = false
+    }
   },
 };
 </script>
@@ -324,7 +384,12 @@ export default {
 .tableList {
   margin-top: 20px;
 }
-.pagint{
+.pagint {
   margin-top: 20px;
+}
+.userfour {
+  p {
+    margin-top: 20px;
+  }
 }
 </style>
